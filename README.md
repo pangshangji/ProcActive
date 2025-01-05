@@ -1,2 +1,6 @@
 # ProcActive
-监控进程的启动退出信息
+Monitor Process Create Or Exit
+
+ProcActive.exe -install
+ProcActive.exe -monitor
+ProcActive.exe -install
