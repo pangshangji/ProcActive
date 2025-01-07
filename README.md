@@ -5,4 +5,4 @@ ProcActive.exe -install
 
 ProcActive.exe -monitor
 
-ProcActive.exe -install
+ProcActive.exe -uninstall
