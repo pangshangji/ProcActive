@@ -176,22 +176,37 @@ VOID WINAPI completion_routine(DWORD errcode, DWORD nread, LPOVERLAPPED lpOverla
     SetEvent(apc_data->hEvent);
 }
 
+char* WCHAR2UTF8(const WCHAR* value)
+{
+    if (NULL == value || L'\0' == *value)
+    {
+        return NULL;
+    }
+    int size = WideCharToMultiByte(CP_UTF8, 0, value, -1, NULL, 0, NULL, NULL);    
+    std::unique_ptr<CHAR[]> temp((CHAR*)malloc(size * sizeof(char)));
+
+    WideCharToMultiByte(CP_UTF8, 0, value, -1, temp.get(), size, NULL, NULL);
+    return temp.release();
+}
+
 int monitor()
-{    
+{
     if (!StartDrvService())
     {
         return 0;
     }
+    SetConsoleOutputCP(65001);
     HANDLE device = CreateFile(SYMBOLIC_PROCACTIVE, GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
     if (INVALID_HANDLE_VALUE == device)
     {
-        printf("CreateFile Failed error:%d\n", GetLastError());        
+        printf("CreateFile Failed error:%d\n", GetLastError());
         return 1;
     }
     ApcData apc_data = { 0 };
 
-    ULONG len = sizeof(ProcData) + 32 * sizeof(WCHAR);
+    ULONG len = sizeof(ProcData) + 32 * sizeof(WCHAR); // 32 default  exe full path len, 32 should is small, next will add len
     ProcData* data = (ProcData*)malloc(len);
+    char utf8_name[1024] = { 0 };
     if (NULL == data)
     {
         return 1;
@@ -236,11 +251,13 @@ int monitor()
             time.dwHighDateTime = data->current_time.HighPart;
             SYSTEMTIME sys_time;
             FileTimeToSystemTime(&time, &sys_time);
-            WCHAR time_buff[256] = { 0 };
-            StringCbPrintf(time_buff, ARRAYSIZE(time_buff), L"%04d-%02d-%02d %02d:%02d:%02d.%03d",
+            CHAR time_buff[256] = { 0 };
+            StringCbPrintfA(time_buff, ARRAYSIZE(time_buff), "%04d-%02d-%02d %02d:%02d:%02d.%03d",
                 sys_time.wYear, sys_time.wMonth, sys_time.wDay,
-                sys_time.wHour, sys_time.wMinute, sys_time.wSecond, sys_time.wMilliseconds);
-            wprintf(L"action:%s time:%s pid:%d %s \n", data->createorexit ? L"create" : L"exit", time_buff, (DWORD)data->pid, *GetName(data) != L'\0' ? GetName(data) : L"NULL");
+                sys_time.wHour, sys_time.wMinute, sys_time.wSecond, sys_time.wMilliseconds);            
+            //wprintf(L"action:%s time:%s pid:%d %ls \n", data->createorexit ? L"create" : L"exit", time_buff, (DWORD)data->pid, *GetName(data) != L'\0' ? GetName(data) : L"NULL");
+            WideCharToMultiByte(CP_UTF8, 0, GetName(data), -1, utf8_name, sizeof(utf8_name), NULL, NULL);            
+            printf("action:%s time:%s pid:%d %s \n", data->createorexit ? "create" : "exit", time_buff, (DWORD)data->pid, *GetName(data) != L'\0' ? utf8_name : "NULL");
         }
     }
 
