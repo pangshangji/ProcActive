@@ -4,3 +4,9 @@
 /drv/x64/Debug/drv.tlog
 drv/x64/Debug/vc142.pdb
 drv/x64/Debug/drv.sys.recipe
+*.user
+*.recipe
+*.ilk
+*.tlog
+*.idb
+ProcActive/x64/Debug/vc142.pdb

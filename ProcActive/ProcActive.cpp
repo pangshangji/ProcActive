@@ -12,6 +12,7 @@ struct ApcData
     BOOL invalid;
     DWORD errorcode;
     ProcData* proc_data;
+    ULONG64 record_count;
 };
 
 #define SERVICE_NAME L"ProcActiveDrv"
@@ -256,8 +257,9 @@ int monitor()
                 sys_time.wYear, sys_time.wMonth, sys_time.wDay,
                 sys_time.wHour, sys_time.wMinute, sys_time.wSecond, sys_time.wMilliseconds);            
             //wprintf(L"action:%s time:%s pid:%d %ls \n", data->createorexit ? L"create" : L"exit", time_buff, (DWORD)data->pid, *GetName(data) != L'\0' ? GetName(data) : L"NULL");
-            WideCharToMultiByte(CP_UTF8, 0, GetName(data), -1, utf8_name, sizeof(utf8_name), NULL, NULL);            
-            printf("action:%s time:%s pid:%d %s \n", data->createorexit ? "create" : "exit", time_buff, (DWORD)data->pid, *GetName(data) != L'\0' ? utf8_name : "NULL");
+            WideCharToMultiByte(CP_UTF8, 0, GetName(data), -1, utf8_name, sizeof(utf8_name), NULL, NULL); 
+            apc_data.record_count++;
+            printf("record_count:%llu action:%s time:%s pid:%d %s \n", apc_data.record_count, data->createorexit ? "create" : "exit", time_buff, (DWORD)data->pid, *GetName(data) != L'\0' ? utf8_name : "NULL");
         }
     }
 
