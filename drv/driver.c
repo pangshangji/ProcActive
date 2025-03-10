@@ -237,6 +237,8 @@ NTSTATUS send_irp_sres(PIRP irp, KIRQL oldirql)
 		memcpy(GetName(data), head->name, head->len);
 		irp->IoStatus.Information = sizeof(ProcData) + head->len;
 		List_Remove(&Proc_Lists, head);
+		ExFreePoolWithTag(head->name, PROC_ACTIVE_POOL_TAG);
+		ExFreePoolWithTag(head, PROC_ACTIVE_POOL_TAG);
 	}
 	irp->IoStatus.Status = status;
 	IoCompleteRequest(irp, IO_NO_INCREMENT);
